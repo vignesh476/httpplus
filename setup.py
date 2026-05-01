@@ -1,0 +1,48 @@
+from setuptools import setup, find_packages 
+
+setup(
+    name = "httpkit",
+    version = "1.0.0",
+    author = "Vignesh buggaram",
+    author_email = "buggaramvignesh@gmail.com",
+    description = "HTTPKit - Professional HTTP Toolkit for Python. Advanced HTTP client with async support, circuit breakers, caching, and schema validation.",
+    long_description = open('README.md', encoding='utf-8').read() if __import__('os').path.exists('README.md') else '',
+    long_description_content_type = 'text/markdown',
+    url = 'https://github.com/vignesh476/httpkit',
+    project_urls = {
+        'Bug Reports': 'https://github.com/vignesh476/httpkit/issues',
+        'Documentation': 'https://github.com/vignesh476/httpkit#readme',
+        'Source Code': 'https://github.com/vignesh476/httpkit',
+        'Changelog': 'https://github.com/vignesh476/httpkit/releases',
+    },
+    packages = find_packages(),
+    install_requires = [
+        'requests>=2.25.0',
+    ],
+    extras_require = {
+        'html': ['beautifulsoup4>=4.9.0', 'lxml>=4.6.0'],
+        'async': ['aiohttp>=3.8.0'],
+        'schema': ['jsonschema>=3.2.0'],
+        'all': ['beautifulsoup4>=4.9.0', 'lxml>=4.6.0', 'aiohttp>=3.8.0', 'jsonschema>=3.2.0'],
+        'dev': ['pytest>=6.0', 'pytest-cov>=2.10.0', 'pytest-asyncio>=0.18.0', 'build>=0.7.0', 'twine>=3.4.0'],
+    },
+    classifiers = [
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    ],
+    keywords = 'http requests async client retry circuit-breaker caching validation',
+    python_requires = '>=3.7',
+    include_package_data = True,
+    zip_safe = False,
+)
