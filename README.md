@@ -58,25 +58,25 @@ HTTPPlus is a battle-tested, production-ready HTTP client library designed to ha
 
 ### Basic Installation
 ```bash
-pip install httpkit
+pip install httpplus
 ```
 
 ### With Optional Features
 ```bash
 # HTML parsing support
-pip install httpkit[html]
+pip install httpplus[html]
 
 # Async support
-pip install httpkit[async]
+pip install httpplus[async]
 
 # Response validation support
-pip install httpkit[schema]
+pip install httpplus[schema]
 
 # All features
-pip install httpkit[all]
+pip install httpplus[all]
 
 # Development tools
-pip install httpkit[dev]
+pip install httpplus[dev]
 ```
 
 ## 🎯 Quick Start
@@ -200,7 +200,7 @@ response = client.get("/protected", session=session)
 pytest
 
 # Run with coverage
-pytest --cov=httpkit tests/
+pytest --cov=httpplus tests/
 
 # Run specific test
 pytest tests/test_http_utils.py::TestHTTPClient
@@ -214,7 +214,7 @@ pytest tests/test_http_utils.py::TestHTTPClient
 
 ## 🔧 Configuration
 
-HTTPKit is highly configurable. See source code documentation for all options:
+httpplus is highly configurable. See source code documentation for all options:
 
 ```python
 HTTPClient(
@@ -233,7 +233,7 @@ HTTPClient(
 
 Contributions are welcome! Please ensure:
 - All tests pass: `pytest`
-- Code follows PEP 8: `flake8 httpkit/`
+- Code follows PEP 8: `flake8 httpplus/`
 - New features include tests and documentation
 
 ## 📝 License
@@ -242,9 +242,9 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ## 🙋 Support
 
-- 📖 Documentation: [GitHub Wiki](https://github.com/yourusername/httpkit/wiki)
-- 🐛 Bug Reports: [GitHub Issues](https://github.com/yourusername/httpkit/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/httpkit/discussions)
+- 📖 Documentation: [GitHub Wiki](https://github.com/vignesh476/httpplus/wiki)
+- 🐛 Bug Reports: [GitHub Issues](https://github.com/vignesh476/httpplus/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/vignesh476/httpplus/discussions)
 
 ---
 
@@ -453,7 +453,7 @@ We welcome contributions! Here's how you can help:
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/my_common_package.git
+git clone https://github.com/vignesh476/my_common_package.git
 cd my_common_package
 
 # Install dev dependencies
@@ -496,8 +496,8 @@ MIT License - See [LICENSE](LICENSE) file for details
 ## 👥 Support
 
 - **Documentation**: [HTTP_UTILS_GUIDE.md](HTTP_UTILS_GUIDE.md)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/my_common_package/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/my_common_package/discussions)
+- **Issues**: [GitHub Issues](https://github.com/vignesh476/my_common_package/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/vignesh476/my_common_package/discussions)
 - **Email Support**: support@example.com
 
 ## 🎯 Roadmap

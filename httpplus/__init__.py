@@ -17,7 +17,7 @@ Perfect for building reliable APIs, microservices, and data pipelines.
 """
 
 __version__ = "1.0.0"
-__author__ = "Vignesh"
+__author__ = "Vignesh Buggaram"
 __license__ = "MIT"
 
 # Import main modules for convenience
