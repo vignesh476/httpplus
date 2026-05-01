@@ -1,5 +1,5 @@
 """
-HTTPKit - Professional HTTP Toolkit for Python
+HTTPPlus - Professional HTTP Toolkit for Python
 
 A production-ready HTTP client library with advanced features including:
 - Async/await support for high-performance concurrent requests

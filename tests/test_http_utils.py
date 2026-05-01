@@ -9,7 +9,7 @@ import time
 from unittest.mock import Mock, patch, MagicMock
 import requests
 
-from httpkit.http_utils import (
+from httpplus.http_utils import (
     HTTPClient,
     ResponseFormat,
     ResponseCache,
@@ -265,7 +265,7 @@ class TestQuickFunctions:
     
     @patch('requests.request')
     def test_quick_get(self, mock_request):
-        from httpkit.http_utils import quick_get
+        from httpplus.http_utils import quick_get
         
         mock_response = Mock()
         mock_response.status_code = 200

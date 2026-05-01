@@ -1,17 +1,17 @@
-# HTTPKit
+# HTTPPlus
 
 **Professional HTTP Toolkit for Python** - Production-ready utilities for modern HTTP operations with advanced features for building reliable APIs and microservices.
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI Version](https://img.shields.io/pypi/v/httpkit.svg)](https://pypi.org/project/httpkit/)
+[![PyPI Version](https://img.shields.io/pypi/v/httpplus.svg)](https://pypi.org/project/httpplus/)
 [![Code style: PEP 8](https://img.shields.io/badge/code%20style-pep%208-green.svg)](https://www.python.org/dev/peps/pep-0008/)
 
 ## 📦 Overview
 
-HTTPKit is a battle-tested, production-ready HTTP client library designed to handle complex real-world scenarios. Beyond basic HTTP requests, it provides enterprise-grade features like circuit breakers, intelligent retry logic, caching, and validation out-of-the-box.
+HTTPPlus is a battle-tested, production-ready HTTP client library designed to handle complex real-world scenarios. Beyond basic HTTP requests, it provides enterprise-grade features like circuit breakers, intelligent retry logic, caching, and validation out-of-the-box.
 
-### Why HTTPKit?
+### Why HTTPPlus?
 
 ✅ **Production-Ready** - Battle-tested with comprehensive error handling  
 ✅ **Async/Await Support** - High-performance concurrent requests with async-await  
@@ -22,7 +22,7 @@ HTTPKit is a battle-tested, production-ready HTTP client library designed to han
 ✅ **Rate Limiting** - Token bucket algorithm for controlling request rate  
 ✅ **Session Management** - Persistent cookies, token refresh, and auth handling  
 ✅ **Minimal Dependencies** - Only requires `requests` (with optional extras)  
-✅ **Thread-Safe** - Safe for multi-threaded and async applications  
+✅ **Thread-Safe** - Safe for multi-threaded and async applications
 
 ## 🚀 Key Features
 
@@ -83,7 +83,7 @@ pip install httpkit[dev]
 
 ### Simple Request
 ```python
-from httpkit import quick_get
+from httpplus import quick_get
 
 # One-liner
 response = quick_get("https://api.github.com/users/github")
@@ -92,7 +92,7 @@ print(response['name'])  # Output: GitHub
 
 ### HTTP Client with Advanced Features
 ```python
-from httpkit import HTTPClient
+from httpplus import HTTPClient
 
 # Create client with features enabled
 client = HTTPClient(
@@ -108,7 +108,7 @@ print(user)
 
 ### Async Operations
 ```python
-from httpkit import AsyncHTTPClient
+from httpplus import AsyncHTTPClient
 import asyncio
 
 async def fetch_multiple():
@@ -126,7 +126,7 @@ data = asyncio.run(fetch_multiple())
 
 ### Circuit Breaker for Resilience
 ```python
-from httpkit import HTTPClient, CircuitBreaker
+from httpplus import HTTPClient, CircuitBreaker
 
 client = HTTPClient(base_url="https://api.example.com")
 breaker = CircuitBreaker(failure_threshold=5, reset_timeout=60)
@@ -144,7 +144,7 @@ except Exception as e:
 
 ### Response Validation
 ```python
-from httpkit import HTTPClient, SchemaValidator
+from httpplus import HTTPClient, SchemaValidator
 
 # Define schema
 user_schema = {
@@ -169,7 +169,7 @@ else:
 
 ### Rate Limiting
 ```python
-from httpkit import RateLimiter
+from httpplus import RateLimiter
 
 # Limit to 100 requests per minute
 limiter = RateLimiter(rate=100, window=60)
@@ -181,7 +181,7 @@ for i in range(150):
 
 ### Session with Authentication
 ```python
-from httpkit import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient(base_url="https://api.example.com")
 session = client.create_session("my_app")

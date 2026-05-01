@@ -1,19 +1,19 @@
 from setuptools import setup, find_packages 
 
 setup(
-    name = "httpkit",
+    name = "httpplus",
     version = "1.0.0",
-    author = "Vignesh buggaram",
+    author = "Vignesh Buggaram",
     author_email = "buggaramvignesh@gmail.com",
-    description = "HTTPKit - Professional HTTP Toolkit for Python. Advanced HTTP client with async support, circuit breakers, caching, and schema validation.",
+    description = "HTTPPlus - Professional HTTP Toolkit for Python. Advanced HTTP client with async support, circuit breakers, caching, and schema validation.",
     long_description = open('README.md', encoding='utf-8').read() if __import__('os').path.exists('README.md') else '',
     long_description_content_type = 'text/markdown',
-    url = 'https://github.com/vignesh476/httpkit',
+    url = 'https://github.com/vignesh476/httpplus',
     project_urls = {
-        'Bug Reports': 'https://github.com/vignesh476/httpkit/issues',
-        'Documentation': 'https://github.com/vignesh476/httpkit#readme',
-        'Source Code': 'https://github.com/vignesh476/httpkit',
-        'Changelog': 'https://github.com/vignesh476/httpkit/releases',
+        'Bug Reports': 'https://github.com/vignesh476/httpplus/issues',
+        'Documentation': 'https://github.com/vignesh476/httpplus#readme',
+        'Source Code': 'https://github.com/vignesh476/httpplus',
+        'Changelog': 'https://github.com/vignesh476/httpplus/releases',
     },
     packages = find_packages(),
     install_requires = [

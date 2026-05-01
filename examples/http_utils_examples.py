@@ -10,7 +10,7 @@ print("=" * 60)
 print("Example 1: GitHub API Client with Caching")
 print("=" * 60)
 
-from httpkit import HTTPClient, ResponseFormat
+from httpplus import HTTPClient, ResponseFormat
 
 def github_api_example():
     """Fetch GitHub user information with caching"""
@@ -157,7 +157,7 @@ print("=" * 60)
 def error_handling_example():
     """Handle different types of errors"""
     
-    from httpkit import (
+    from httpplus import (
         HTTPClient,
         HTTPRetryException,
         HTTPTimeoutException,
@@ -197,7 +197,7 @@ print("=" * 60)
 def response_format_example():
     """Parse responses in different formats"""
     
-    from httpkit import HTTPClient, ResponseFormat
+    from httpplus import HTTPClient, ResponseFormat
     
     client = HTTPClient()
     
@@ -230,7 +230,7 @@ print("=" * 60)
 def circuit_breaker_example():
     """Demonstrate circuit breaker pattern"""
     
-    from httpkit import HTTPClient, HTTPCircuitBreakerException
+    from httpplus import HTTPClient, HTTPCircuitBreakerException
     
     # Simulate a failing service
     client = HTTPClient()
@@ -247,7 +247,7 @@ print("=" * 60)
 def file_download_example():
     """Download file with progress tracking"""
     
-    from httpkit import HTTPClient
+    from httpplus import HTTPClient
     import os
     
     client = HTTPClient()
@@ -279,7 +279,7 @@ print("=" * 60)
 def api_testing_example():
     """Test multiple endpoints and collect metrics"""
     
-    from httpkit import HTTPClient
+    from httpplus import HTTPClient
     import time
     
     client = HTTPClient(base_url="https://jsonplaceholder.typicode.com")
@@ -303,7 +303,7 @@ print("=" * 60)
 def custom_headers_example():
     """Use custom headers and authentication"""
     
-    from httpkit import HTTPClient
+    from httpplus import HTTPClient
     
     client = HTTPClient(base_url="https://api.example.com")
     session = client.create_session("api_client")
