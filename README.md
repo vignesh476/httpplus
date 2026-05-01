@@ -5,26 +5,26 @@
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI Version](https://img.shields.io/pypi/v/httpplus.svg)](https://pypi.org/project/httpplus/)
-[![Code style: PEP 8](https://img.shields.io/badge/code%20style-pep%208-green.svg)](https://www.python.org/dev/peps/pep-0008/)
+[![Code style: PEP 8](https://img.shields.io/badge/code%20style-pep%200088-green.svg)](https://www.python.org/dev/peps/pep-0008/)
 
-## 📦 Overview
+## Overview
 
 HTTPPlus is a battle-tested, production-ready HTTP client library designed to handle complex real-world scenarios. Beyond basic HTTP requests, it provides enterprise-grade features like circuit breakers, intelligent retry logic, caching, and validation out-of-the-box.
 
 ### Why HTTPPlus?
 
-✅ **Production-Ready** - Battle-tested with comprehensive error handling  
-✅ **Async/Await Support** - High-performance concurrent requests with async-await  
-✅ **Smart Retry Logic** - Exponential backoff with jitter to prevent thundering herd  
-✅ **Circuit Breaker** - Automatic fault tolerance and graceful degradation  
-✅ **Intelligent Caching** - TTL-based response caching with thread safety  
-✅ **Schema Validation** - JSON Schema support for response validation  
-✅ **Rate Limiting** - Token bucket algorithm for controlling request rate  
-✅ **Session Management** - Persistent cookies, token refresh, and auth handling  
-✅ **Minimal Dependencies** - Only requires `requests` (with optional extras)  
-✅ **Thread-Safe** - Safe for multi-threaded and async applications
+- **Production-Ready** - Battle-tested with comprehensive error handling
+- **Async/Await Support** - High-performance concurrent requests with async-await
+- **Smart Retry Logic** - Exponential backoff with jitter to prevent thundering herd
+- **Circuit Breaker** - Automatic fault tolerance and graceful degradation
+- **Intelligent Caching** - TTL-based response caching with thread safety
+- **Schema Validation** - JSON Schema support for response validation
+- **Rate Limiting** - Token bucket algorithm for controlling request rate
+- **Session Management** - Persistent cookies, token refresh, and auth handling
+- **Minimal Dependencies** - Only requires `requests` (with optional extras)
+- **Thread-Safe** - Safe for multi-threaded and async applications
 
-## 🚀 Key Features
+## Key Features
 
 ### Smart HTTP Client
 - Exponential backoff with jitter for intelligent retries
@@ -54,7 +54,7 @@ HTTPPlus is a battle-tested, production-ready HTTP client library designed to ha
 - Cookie and authentication token management
 - Customizable error handling
 
-## 📥 Installation
+## Installation
 
 ### Basic Installation
 ```bash
@@ -79,15 +79,15 @@ pip install httpplus[all]
 pip install httpplus[dev]
 ```
 
-## 🎯 Quick Start
+## Quick Start
 
 ### Simple Request
 ```python
 from httpplus import quick_get
 
-# One-liner
-response = quick_get("https://api.github.com/users/github")
-print(response['name'])  # Output: GitHub
+# One-liner GET request
+response = quick_get("https://jsonplaceholder.typicode.com/users/1")
+print(response)  # Returns parsed JSON response
 ```
 
 ### HTTP Client with Advanced Features
@@ -96,14 +96,28 @@ from httpplus import HTTPClient
 
 # Create client with features enabled
 client = HTTPClient(
-    base_url="https://api.example.com",
+    base_url="https://jsonplaceholder.typicode.com",
     enable_caching=True,
+    cache_ttl=3600,
     max_retries=3,
+    backoff_factor=2.0,
 )
 
 # Automatic caching, retries, and error handling
-user = client.get("/users/123")
+user = client.get("/users/1")
 print(user)
+```
+
+### POST Request
+```python
+from httpplus import quick_post
+
+# POST with JSON body
+response = quick_post(
+    "https://jsonplaceholder.typicode.com/posts",
+    json={"title": "My Post", "body": "Content", "userId": 1}
+)
+print(response)
 ```
 
 ### Async Operations
@@ -112,11 +126,11 @@ from httpplus import AsyncHTTPClient
 import asyncio
 
 async def fetch_multiple():
-    client = AsyncHTTPClient(base_url="https://api.example.com")
+    client = AsyncHTTPClient(base_url="https://jsonplaceholder.typicode.com")
     
     # Concurrent requests
-    user = await client.get("/users/123")
-    posts = await client.get("/posts/456")
+    user = await client.get("/users/1")
+    posts = await client.get("/posts/1")
     
     return user, posts
 
@@ -126,27 +140,29 @@ data = asyncio.run(fetch_multiple())
 
 ### Circuit Breaker for Resilience
 ```python
-from httpplus import HTTPClient, CircuitBreaker
+from httpplus import HTTPClient, CircuitBreaker, CircuitBreakerState
 
-client = HTTPClient(base_url="https://api.example.com")
+client = HTTPClient(base_url="https://jsonplaceholder.typicode.com")
 breaker = CircuitBreaker(failure_threshold=5, reset_timeout=60)
 
 # Add event handlers
-breaker.add_on_open(lambda: print("⚠️  Circuit opened - too many failures"))
-breaker.add_on_close(lambda: print("✅ Circuit closed - service recovered"))
+breaker.add_on_open(lambda: print("Warning: Circuit opened - too many failures"))
+breaker.add_on_close(lambda: print("Success: Circuit closed - service recovered"))
 
-try:
-    if not breaker.is_open():
-        response = client.get("/health")
-except Exception as e:
-    breaker.record_failure()
+# Check circuit state
+if breaker.state == CircuitBreakerState.CLOSED:
+    try:
+        response = client.get("/users/1")
+        print(f"Response: {response}")
+    except Exception as e:
+        print(f"Circuit breaker failure: {e}")
 ```
 
 ### Response Validation
 ```python
 from httpplus import HTTPClient, SchemaValidator
 
-# Define schema
+# Define JSON schema
 user_schema = {
     "type": "object",
     "properties": {
@@ -157,26 +173,26 @@ user_schema = {
     "required": ["id", "name"]
 }
 
-validator = SchemaValidator(user_schema)
-client = HTTPClient(base_url="https://api.example.com")
+validator = SchemaValidator()
+client = HTTPClient(base_url="https://jsonplaceholder.typicode.com")
 
-response = client.get("/users/123")
-if validator.validate(response):
-    print("✅ Response is valid")
+response = client.get("/users/1")
+if validator.validate(response, user_schema):
+    print("Response is valid")
 else:
-    print("❌ Validation errors:", validator.get_errors())
+    print("Validation errors:", validator.get_errors())
 ```
 
 ### Rate Limiting
 ```python
 from httpplus import RateLimiter
 
-# Limit to 100 requests per minute
-limiter = RateLimiter(rate=100, window=60)
+# Limit to 10 requests per second with burst of 20
+limiter = RateLimiter(requests_per_second=10, burst_size=20)
 
-for i in range(150):
+for i in range(15):
     limiter.acquire()  # Waits if necessary
-    # Make request
+    print(f"Request {i+1} allowed")
 ```
 
 ### Session with Authentication
@@ -184,178 +200,139 @@ for i in range(150):
 from httpplus import HTTPClient
 
 client = HTTPClient(base_url="https://api.example.com")
-session = client.create_session("my_app")
+session = client.create_session("my_app", persist_cookies=False)
 
 # Set auth token (auto-refreshes on expiry)
 session.set_auth_token("your_token_here", expires_in=3600)
+
+# Set custom headers
+session.set_headers({
+    "X-API-Version": "2.0",
+    "Accept": "application/json"
+})
 
 # Use session for authenticated requests
 response = client.get("/protected", session=session)
 ```
 
-## 🧪 Testing
+### File Download with Progress
+```python
+from httpplus import HTTPClient
 
-```bash
-# Run all tests
-pytest
+client = HTTPClient()
 
-# Run with coverage
-pytest --cov=httpplus tests/
+def show_progress(current, total):
+    percent = (current / total) * 100 if total > 0 else 0
+    print(f"Downloaded {percent:.1f}%")
 
-# Run specific test
-pytest tests/test_http_utils.py::TestHTTPClient
+# Download file (requires valid URL)
+client.download_file(
+    "https://example.com/file.zip",
+    "local_file.zip",
+    progress_callback=show_progress
+)
 ```
 
-## 📚 Documentation
+### Batch Requests
+```python
+from httpplus import HTTPClient
 
-- [FEATURES.md](FEATURES.md) - Complete feature documentation
-- [examples/](examples/) - Code examples
-- [tests/](tests/) - Test suite showing usage patterns
+client = HTTPClient(base_url="https://jsonplaceholder.typicode.com")
 
-## 🔧 Configuration
+requests_list = [
+    {"method": "GET", "endpoint": "/users/1"},
+    {"method": "GET", "endpoint": "/users/2"},
+    {"method": "GET", "endpoint": "/users/3"},
+]
 
-httpplus is highly configurable. See source code documentation for all options:
+results = client.batch_requests(requests_list)
+successful = sum(1 for r in results if r['success'])
+print(f"Successful: {successful}/{len(results)}")
+```
+
+### Health Checks
+```python
+from httpplus import HTTPClient
+
+client = HTTPClient()
+endpoints = [
+    ("API", "https://jsonplaceholder.typicode.com"),
+    ("Google", "https://google.com"),
+]
+
+for name, url in endpoints:
+    status = "Healthy" if client.health_check(url) else "Unhealthy"
+    print(f"{name}: {status}")
+```
+
+### Fallback URLs
+```python
+from httpplus import HTTPClient
+
+client = HTTPClient()
+
+try:
+    response = client.get(
+        "https://primary-api.example.com/data",
+        fallback_urls=[
+            "https://backup1.example.com/data",
+            "https://backup2.example.com/data",
+        ]
+    )
+except Exception as e:
+    print(f"All URLs failed: {e}")
+```
+
+### Different Response Formats
+```python
+from httpplus import HTTPClient, ResponseFormat
+
+client = HTTPClient()
+
+# JSON response (default)
+json_data = client.get(
+    "https://jsonplaceholder.typicode.com/posts/1",
+    response_format=ResponseFormat.JSON
+)
+
+# Text response
+text_data = client.get(
+    "https://example.com",
+    response_format=ResponseFormat.TEXT
+)
+
+# Bytes response
+bytes_data = client.get(
+    "https://example.com",
+    response_format=ResponseFormat.BYTES
+)
+```
+
+## Configuration
+
+HTTPPlus is highly configurable:
 
 ```python
 HTTPClient(
     base_url="https://api.example.com",
     timeout=30,
     max_retries=3,
+    backoff_factor=2.0,
     enable_caching=True,
     cache_ttl=3600,
-    enable_circuit_breaker=True,
-    verify_ssl=True,
-    allow_redirects=True,
+    enable_logging=True,
 )
 ```
 
-## 🤝 Contributing
-
-Contributions are welcome! Please ensure:
-- All tests pass: `pytest`
-- Code follows PEP 8: `flake8 httpplus/`
-- New features include tests and documentation
-
-## 📝 License
-
-MIT License - See [LICENSE](LICENSE) file for details
-
-## 🙋 Support
-
-- 📖 Documentation: [GitHub Wiki](https://github.com/vignesh476/httpplus/wiki)
-- 🐛 Bug Reports: [GitHub Issues](https://github.com/vignesh476/httpplus/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/vignesh476/httpplus/discussions)
-
----
-
-**Made with ❤️ for developers building reliable applications**
-
-# All requests use this token
-protected_data = client.get("/protected/endpoint")
-```
-
-### Download with Progress
-```python
-from my_common_package import HTTPClient
-
-client = HTTPClient()
-
-def show_progress(current, total):
-    percent = (current / total) * 100
-    print(f"Downloaded {percent:.1f}%")
-
-client.download_file(
-    "https://example.com/large-file.zip",
-    "local_file.zip",
-    progress_callback=show_progress
-)
-```
-
-## 📚 Documentation
-
-### Complete Guides
-- [HTTP Utils Advanced Guide](HTTP_UTILS_GUIDE.md) - Complete HTTP utilities documentation
-- [Examples](examples/http_utils_examples.py) - Real-world usage examples
-- [API Reference](docs/API.md) - Complete API documentation
-
-### Feature Highlights
-See [FEATURES.md](FEATURES.md) for detailed feature descriptions and use cases.
-
-## 💡 Real-World Examples
-
-### API Monitoring Dashboard
-```python
-from my_common_package import HTTPClient
-
-client = HTTPClient()
-endpoints = [
-    ("API", "https://api.example.com/health"),
-    ("Database", "https://db.example.com/ping"),
-    ("Cache", "https://cache.example.com/status"),
-]
-
-for name, url in endpoints:
-    status = "✓" if client.health_check(url) else "✗"
-    print(f"{name:15} {status}")
-```
-
-### Batch Data Processing
-```python
-client = HTTPClient(base_url="https://api.example.com")
-
-requests_list = [
-    {"method": "GET", "endpoint": f"/items/{i}"} 
-    for i in range(1, 101)
-]
-
-results = client.batch_requests(requests_list)
-successful = sum(1 for r in results if r['success'])
-print(f"Processed {successful}/100 items")
-```
-
-### Resilient API Client
-```python
-from my_common_package import (
-    HTTPClient, 
-    HTTPTimeoutException,
-    HTTPCircuitBreakerException
-)
-
-client = HTTPClient(
-    max_retries=5,
-    backoff_factor=2.0,  # Exponential backoff
-)
-
-try:
-    data = client.get(
-        "/endpoint",
-        fallback_urls=[
-            "https://backup1.example.com/endpoint",
-            "https://backup2.example.com/endpoint",
-        ]
-    )
-except HTTPCircuitBreakerException:
-    print("Service temporarily unavailable")
-```
-
-## 🔧 Configuration
-
-### Environment Setup
+### Environment Variables
 ```python
 import logging
-from my_common_package import HTTPClient
 
 # Enable debug logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Create client with custom config
 client = HTTPClient(
     base_url="https://api.example.com",
-    timeout=60,
-    max_retries=5,
-    backoff_factor=2.0,
-    cache_ttl=1800,
-    enable_caching=True,
     enable_logging=True,
 )
 ```
@@ -371,179 +348,81 @@ session.set_proxies({
 })
 ```
 
-## 🧪 Testing
+## Error Handling
 
-Run the comprehensive test suite:
+HTTPPlus provides a custom exception hierarchy:
+
+```python
+from httpplus import (
+    HTTPClient,
+    HTTPUtilException,
+    HTTPRetryException,
+    HTTPTimeoutException,
+    HTTPCircuitBreakerException,
+    HTTPValidationException,
+)
+
+client = HTTPClient(max_retries=3)
+
+try:
+    response = client.get("/users/1")
+except HTTPRetryException as e:
+    print(f"Max retries exceeded: {e}")
+except HTTPTimeoutException as e:
+    print(f"Request timeout: {e}")
+except HTTPCircuitBreakerException as e:
+    print(f"Circuit breaker open: {e}")
+except HTTPValidationException as e:
+    print(f"Validation error: {e}")
+except HTTPUtilException as e:
+    print(f"HTTP error: {e}")
+```
+
+## Testing
 
 ```bash
 # Run all tests
-pytest tests/ -v
+pytest
 
-# Run specific test file
-pytest tests/test_http_utils.py -v
+# Run with coverage
+pytest --cov=httpplus tests/
 
-# Run with coverage report
-pytest tests/ --cov=my_common_package --cov-report=html
+# Run specific test
+pytest tests/test_http_utils.py::TestHTTPClient
 ```
 
-## 📊 Performance Metrics
-
-Benchmark results on standard hardware:
-
-| Operation | Speed |
-|-----------|-------|
-| Simple GET request | ~150ms |
-| Cached GET request | ~1ms |
-| Batch request (10 items) | ~1.5s |
-| File download (100MB) | Network speed |
-| Rate-limited requests (100) | Respect configured rate |
-
-## 🔒 Security Features
-
-- **HTTPS Support** - Full SSL/TLS support with certificate verification
-- **Secure Token Storage** - Token persistence with proper file permissions
-- **Connection Pooling** - Reuse connections securely
-- **Timeout Protection** - Prevent hanging requests
-- **Input Validation** - All inputs validated before use
-- **Error Privacy** - Sensitive data not logged in exceptions
-
-## 🌐 API Compatibility
-
-Tested and compatible with:
-- ✅ GitHub API
-- ✅ REST APIs (Generic)
-- ✅ JSON APIs
-- ✅ GraphQL endpoints (via JSON)
-- ✅ XML APIs
-- ✅ CSV endpoints
-- ✅ File upload/download services
-- ✅ WebHook endpoints
-
-## 📋 Requirements
+## Requirements
 
 - **Python**: 3.7 or higher
 - **Core Dependencies**: requests >= 2.25.0
-- **Optional Dependencies**: 
+- **Optional Dependencies**:
   - beautifulsoup4 >= 4.9.0 (for HTML parsing)
-  - lxml >= 4.6.0 (for faster parsing)
+  - aiohttp >= 3.8.0 (for async support)
+  - jsonschema >= 4.0.0 (for response validation)
 
-## 🎓 Learning Resources
+## Documentation
 
-### Getting Started
-1. [Quick Start Guide](#quick-start)
-2. [HTTP Utils Documentation](HTTP_UTILS_GUIDE.md)
-3. [Examples](examples/http_utils_examples.py)
+- [FEATURES.md](FEATURES.md) - Complete feature documentation
+- [examples/](examples/) - Code examples
+- [tests/](tests/) - Test suite showing usage patterns
 
-### Advanced Topics
-- [Circuit Breaker Pattern](HTTP_UTILS_GUIDE.md#circuit-breaker-pattern)
-- [Response Caching Strategy](HTTP_UTILS_GUIDE.md#caching-responses)
-- [Error Handling Best Practices](HTTP_UTILS_GUIDE.md#exception-handling)
-- [Performance Optimization](HTTP_UTILS_GUIDE.md#performance-tips)
+## Contributing
 
-## 🤝 Contributing
+Contributions are welcome! Please ensure:
+- All tests pass: `pytest`
+- Code follows PEP 8
+- New features include tests and documentation
 
-We welcome contributions! Here's how you can help:
-
-1. **Report Bugs** - Use GitHub Issues
-2. **Suggest Features** - Open a discussion
-3. **Submit Code** - Create pull requests
-4. **Improve Docs** - Help with documentation
-5. **Share Examples** - Contribute real-world use cases
-
-### Development Setup
-```bash
-# Clone the repository
-git clone https://github.com/vignesh476/my_common_package.git
-cd my_common_package
-
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest tests/ -v
-
-# Check code style
-pylint my_common_package/
-```
-
-## 📝 Changelog
-
-### Version 1.0.0 (2024)
-**Initial Release**
-- ✨ Advanced HTTPClient with retry logic
-- ✨ Circuit breaker pattern implementation
-- ✨ Request/response caching system
-- ✨ Rate limiting with token bucket
-- ✨ Session management with persistence
-- ✨ Multiple response format parsing
-- ✨ File upload/download with progress
-- ✨ Health check monitoring
-- ✨ Comprehensive exception handling
-- ✨ Request/response logging
-- 📚 Complete documentation
-- ✅ Comprehensive test suite
-
-## 🐛 Known Issues & Limitations
-
-- Async support coming in v2.0
-- WebSocket support planned
-- GraphQL-specific features coming soon
-
-## 📄 License
+## License
 
 MIT License - See [LICENSE](LICENSE) file for details
 
-## 👥 Support
+## Support
 
-- **Documentation**: [HTTP_UTILS_GUIDE.md](HTTP_UTILS_GUIDE.md)
-- **Issues**: [GitHub Issues](https://github.com/vignesh476/my_common_package/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/vignesh476/my_common_package/discussions)
-- **Email Support**: support@example.com
-
-## 🎯 Roadmap
-
-### Version 1.1.0 (Q2 2024)
-- [ ] Async/await support
-- [ ] WebSocket integration
-- [ ] GraphQL helpers
-- [ ] Request signing (AWS, Azure)
-- [ ] Performance profiling tools
-
-### Version 2.0.0 (Q4 2024)
-- [ ] Full async API
-- [ ] gRPC client wrapper
-- [ ] Distributed tracing support
-- [ ] Enhanced monitoring
-
-## 📊 Statistics
-
-- **Tests**: 50+ comprehensive tests
-- **Code Coverage**: 95%+
-- **Documentation**: 20+ pages
-- **Examples**: 12+ real-world scenarios
-- **Downloads**: Targeted for PyPI publication
-
-## 🏆 Best Practices
-
-This package follows:
-- ✅ **PEP 8** - Python style guide
-- ✅ **Semantic Versioning** - Clear version scheme
-- ✅ **Google-style Docstrings** - Comprehensive documentation
-- ✅ **Type Hints** - Better IDE support
-- ✅ **Thread Safety** - Proper synchronization
-- ✅ **Exception Handling** - Custom exception hierarchy
-
-## 💬 Feedback
-
-Your feedback helps us improve! Please:
-- ⭐ Star the repository if you find it useful
-- 📢 Share your experience
-- 🐛 Report bugs
-- 💡 Suggest features
-- 📝 Contribute improvements
+- Documentation: [GitHub Wiki](https://github.com/vignesh476/httpplus/wiki)
+- Bug Reports: [GitHub Issues](https://github.com/vignesh476/httpplus/issues)
+- Discussions: [GitHub Discussions](https://github.com/vignesh476/httpplus/discussions)
 
 ---
 
-**Made with ❤️ for the Python community**
-
-Start using `my_common_package` today for production-ready utilities that make your code more reliable, secure, and maintainable!
+**Made with love for developers building reliable applications**
