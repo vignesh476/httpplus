@@ -140,27 +140,29 @@ data = asyncio.run(fetch_multiple())
 
 ### Circuit Breaker for Resilience
 ```python
-from httpplus import HTTPClient, CircuitBreaker, CircuitBreakerState
+from httpplus import HTTPClient, CircuitBreakerState, HTTPCircuitBreakerException
 
+# Circuit breaker is integrated into HTTPClient by default
 client = HTTPClient(base_url="https://jsonplaceholder.typicode.com")
-breaker = CircuitBreaker(failure_threshold=5, reset_timeout=60)
 
-# Add event handlers
-breaker.add_on_open(lambda: print("Warning: Circuit opened - too many failures"))
-breaker.add_on_close(lambda: print("Success: Circuit closed - service recovered"))
+# Add event handlers for circuit state changes
+client.circuit_breaker.add_on_open(lambda: print("Warning: Circuit opened - too many failures"))
+client.circuit_breaker.add_on_close(lambda: print("Success: Circuit closed - service recovered"))
+client.circuit_breaker.add_on_half_open(lambda: print("Info: Testing service recovery..."))
 
-# Check circuit state
-if breaker.state == CircuitBreakerState.CLOSED:
+# Check circuit state before making request
+if client.circuit_breaker.state == CircuitBreakerState.CLOSED:
     try:
         response = client.get("/users/1")
         print(f"Response: {response}")
-    except Exception as e:
-        print(f"Circuit breaker failure: {e}")
+    except HTTPCircuitBreakerException as e:
+        print(f"Circuit breaker is open: {e}")
+        # Use cached data or fallback URL as fallback
 ```
 
 ### Response Validation
 ```python
-from httpplus import HTTPClient, SchemaValidator
+from httpplus import HTTPClient, SchemaValidator, HTTPSchemaValidationException
 
 # Define JSON schema
 user_schema = {
@@ -176,11 +178,21 @@ user_schema = {
 validator = SchemaValidator()
 client = HTTPClient(base_url="https://jsonplaceholder.typicode.com")
 
-response = client.get("/users/1")
-if validator.validate(response, user_schema):
+try:
+    # Validation happens during the request if response_schema is provided
+    response = client.get("/users/1", response_schema=user_schema)
     print("Response is valid")
-else:
-    print("Validation errors:", validator.get_errors())
+    print(f"User name: {response.get('name')}")
+except HTTPSchemaValidationException as e:
+    print(f"Validation error: {e}")
+
+# You can also validate separately:
+data = client.get("/users/1")
+try:
+    validator.validate(data, user_schema)
+    print("Data is valid")
+except HTTPSchemaValidationException as e:
+    print(f"Validation failed: {e}")
 ```
 
 ### Rate Limiting
@@ -359,7 +371,8 @@ from httpplus import (
     HTTPRetryException,
     HTTPTimeoutException,
     HTTPCircuitBreakerException,
-    HTTPValidationException,
+    HTTPSchemaValidationException,
+    HTTPParsingException,
 )
 
 client = HTTPClient(max_retries=3)
@@ -372,8 +385,10 @@ except HTTPTimeoutException as e:
     print(f"Request timeout: {e}")
 except HTTPCircuitBreakerException as e:
     print(f"Circuit breaker open: {e}")
-except HTTPValidationException as e:
-    print(f"Validation error: {e}")
+except HTTPSchemaValidationException as e:
+    print(f"Schema validation error: {e}")
+except HTTPParsingException as e:
+    print(f"Response parsing error: {e}")
 except HTTPUtilException as e:
     print(f"HTTP error: {e}")
 ```

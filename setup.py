@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "httpplus",
-    version = "1.0.0",
+    version = "1.0.2",
     author = "Vignesh Buggaram",
     author_email = "buggaramvignesh@gmail.com",
     description = "HTTPPlus - Professional HTTP Toolkit for Python. Advanced HTTP client with async support, circuit breakers, caching, and schema validation.",
@@ -35,7 +35,7 @@ setup(
         'Programming Language :: Python :: 3.11',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Internet :: WWW/HTTP',

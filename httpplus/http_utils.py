@@ -85,19 +85,18 @@ class HTTPCircuitBreakerException(HTTPUtilException):
     pass
 
 
-class HTTPValidationException(HTTPUtilException):
-    """Raised when response validation fails"""
-    pass
-
-
 class HTTPParsingException(HTTPUtilException):
     """Raised when response parsing fails"""
     pass
 
 
 class HTTPSchemaValidationException(HTTPUtilException):
-    """Raised when response schema validation fails"""
+    """Raised when response schema validation fails (alias: HTTPValidationException)"""
     pass
+
+
+# Alias for backwards compatibility
+HTTPValidationException = HTTPSchemaValidationException
 
 
 # ============================================================================
@@ -549,7 +548,16 @@ class HTTPClient:
             HTTPCircuitBreakerException: If circuit breaker is open
             HTTPTimeoutException: If request times out
             HTTPSchemaValidationException: If response validation fails
+            ValueError: If method or endpoint are invalid
         """
+        # Input validation
+        if not method or not isinstance(method, str):
+            raise ValueError(f"Invalid method: {method}")
+        if not endpoint or not isinstance(endpoint, str):
+            raise ValueError(f"Invalid endpoint: {endpoint}")
+        if not isinstance(response_format, ResponseFormat):
+            raise ValueError(f"Invalid response_format: {response_format}")
+        
         url = self._build_url(endpoint)
         timeout = kwargs.pop('timeout', self.timeout)
         
@@ -726,32 +734,59 @@ class HTTPClient:
         Args:
             endpoint: URL to download from
             save_path: Path to save file
-            chunk_size: Download chunk size
+            chunk_size: Download chunk size (default: 8192 bytes)
             progress_callback: Callback function(current_bytes, total_bytes)
             
         Returns:
             Path to saved file
+            
+        Raises:
+            ValueError: If parameters are invalid
+            HTTPTimeoutException: If download times out
+            HTTPRetryException: If download fails
         """
+        # Input validation
+        if not endpoint or not isinstance(endpoint, str):
+            raise ValueError(f"Invalid endpoint: {endpoint}")
+        if not save_path or not isinstance(save_path, str):
+            raise ValueError(f"Invalid save_path: {save_path}")
+        if chunk_size <= 0:
+            raise ValueError(f"chunk_size must be positive: {chunk_size}")
+        
         url = self._build_url(endpoint)
         self._log_request('GET', url, **kwargs)
+        timeout = kwargs.pop('timeout', self.timeout)
         
-        response = requests.get(url, stream=True, timeout=self.timeout, **kwargs)
-        response.raise_for_status()
-        
-        total_size = int(response.headers.get('content-length', 0))
-        downloaded = 0
-        
-        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-        
-        with open(save_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=chunk_size):
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    if progress_callback:
-                        progress_callback(downloaded, total_size)
-        
-        return save_path
+        try:
+            response = requests.get(url, stream=True, timeout=timeout, **kwargs)
+            response.raise_for_status()
+            
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded = 0
+            
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(save_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if progress_callback:
+                            progress_callback(downloaded, total_size)
+            
+            # Verify download completed
+            if total_size > 0 and downloaded != total_size:
+                self.logger.warning(f"Incomplete download: {downloaded}/{total_size} bytes")
+            
+            self.logger.debug(f"File downloaded: {save_path} ({downloaded} bytes)")
+            return save_path
+            
+        except requests.Timeout:
+            raise HTTPTimeoutException(f"Download timeout: {url}")
+        except requests.RequestException as e:
+            raise HTTPRetryException(f"Download failed: {str(e)}")
+        except Exception as e:
+            raise HTTPRetryException(f"Download error: {str(e)}")
     
     def upload_file(self,
                    endpoint: str,
@@ -770,21 +805,44 @@ class HTTPClient:
             
         Returns:
             Parsed response
+            
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            HTTPRetryException: If upload fails after retries
         """
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        file_size = file_path.stat().st_size
         url = self._build_url(endpoint)
+        timeout = kwargs.pop('timeout', self.timeout)
         
-        file_size = Path(file_path).stat().st_size
-        uploaded = 0
+        # Disable cache for uploads and use explicit progress tracking
+        self._log_request('POST', url, **kwargs)
         
-        def callback_wrapper(monitor):
-            nonlocal uploaded
-            current = monitor.bytes_read
-            if progress_callback:
-                progress_callback(current, file_size)
-        
-        with open(file_path, 'rb') as f:
-            files = {field_name: f}
-            return self.post(endpoint, files=files, **kwargs)
+        try:
+            with open(file_path, 'rb') as f:
+                files = {field_name: f}
+                response = requests.post(
+                    url, 
+                    files=files, 
+                    timeout=timeout,
+                    **kwargs
+                )
+                response.raise_for_status()
+                
+                # Report final progress
+                if progress_callback:
+                    progress_callback(file_size, file_size)
+                
+                return ResponseParser.parse(response, kwargs.get('response_format', ResponseFormat.JSON))
+        except requests.RequestException as e:
+            raise HTTPRetryException(f"File upload failed: {str(e)}")
+        except FileNotFoundError as e:
+            raise
+        except Exception as e:
+            raise HTTPRetryException(f"Upload error: {str(e)}")
     
     def batch_requests(self,
                       requests_list: List[Dict[str, Any]],
@@ -820,20 +878,39 @@ class HTTPClient:
         
         Args:
             endpoint: Endpoint to check
-            expected_status: Expected HTTP status
-            timeout: Check timeout in seconds
+            expected_status: Expected HTTP status code (default: 200)
+            timeout: Check timeout in seconds (default: 5)
             
         Returns:
-            True if healthy, False otherwise
+            True if healthy (status matches), False otherwise
         """
+        if not endpoint or not isinstance(endpoint, str):
+            self.logger.warning(f"Invalid endpoint for health check: {endpoint}")
+            return False
+        
+        if not isinstance(expected_status, int) or expected_status < 100 or expected_status >= 600:
+            self.logger.warning(f"Invalid expected_status: {expected_status}")
+            return False
+        
         try:
             response = requests.head(
                 self._build_url(endpoint),
                 timeout=timeout,
                 allow_redirects=True
             )
-            return response.status_code == expected_status
-        except Exception:
+            is_healthy = response.status_code == expected_status
+            if not is_healthy:
+                self.logger.debug(f"Health check failed for {endpoint}: "
+                                f"expected {expected_status}, got {response.status_code}")
+            return is_healthy
+        except requests.Timeout:
+            self.logger.warning(f"Health check timeout for {endpoint}")
+            return False
+        except requests.RequestException as e:
+            self.logger.warning(f"Health check failed for {endpoint}: {str(e)}")
+            return False
+        except Exception as e:
+            self.logger.error(f"Health check error for {endpoint}: {str(e)}")
             return False
     
     def clear_cache(self):
@@ -874,10 +951,30 @@ class AsyncHTTPClient:
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
         self.logger = logging.getLogger(f"http_utils.AsyncHTTPClient")
+        self.session: Optional[aiohttp.ClientSession] = None
     
     def _build_url(self, endpoint: str) -> str:
         """Build full URL from base and endpoint"""
         return urljoin(self.base_url, endpoint) if self.base_url else endpoint
+    
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create client session (reuse for efficiency)"""
+        if self.session is None or self.session.closed:
+            self.session = aiohttp.ClientSession(timeout=self.timeout)
+        return self.session
+    
+    async def close(self):
+        """Close the client session (call at end of usage)"""
+        if self.session and not self.session.closed:
+            await self.session.close()
+    
+    async def __aenter__(self):
+        """Context manager entry"""
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit"""
+        await self.close()
     
     async def request(self,
                      method: str,
@@ -895,40 +992,47 @@ class AsyncHTTPClient:
             
         Returns:
             Parsed response
+            
+        Raises:
+            HTTPRetryException: If all retries failed
+            HTTPTimeoutException: If request times out
         """
         url = self._build_url(endpoint)
+        session = await self._get_session()
+        last_exception = None
         
         for attempt in range(self.max_retries):
             try:
-                async with aiohttp.ClientSession(timeout=self.timeout) as session:
-                    async with session.request(method, url, **kwargs) as response:
-                        if response.status >= 400:
-                            response.raise_for_status()
-                        
-                        if response_format == ResponseFormat.JSON:
-                            return await response.json()
-                        elif response_format == ResponseFormat.TEXT:
-                            return await response.text()
-                        elif response_format == ResponseFormat.BYTES:
-                            return await response.read()
-                        else:
-                            return await response.text()
+                async with session.request(method, url, **kwargs) as response:
+                    if response.status >= 400:
+                        response.raise_for_status()
+                    
+                    if response_format == ResponseFormat.JSON:
+                        return await response.json()
+                    elif response_format == ResponseFormat.TEXT:
+                        return await response.text()
+                    elif response_format == ResponseFormat.BYTES:
+                        return await response.read()
+                    else:
+                        return await response.text()
             
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as e:
+                last_exception = HTTPTimeoutException(f"Request timeout: {url}")
                 self.logger.warning(f"Timeout on attempt {attempt + 1}")
                 if attempt < self.max_retries - 1:
                     wait_time = self.backoff_factor ** attempt
                     wait_time += random.uniform(0, wait_time * 0.1)  # Jitter
                     await asyncio.sleep(wait_time)
             
-            except aiohttp.ClientError as e:
+            except (aiohttp.ClientError, Exception) as e:
+                last_exception = e
                 self.logger.warning(f"Request failed on attempt {attempt + 1}: {str(e)}")
                 if attempt < self.max_retries - 1:
                     wait_time = self.backoff_factor ** attempt
                     wait_time += random.uniform(0, wait_time * 0.1)  # Jitter
                     await asyncio.sleep(wait_time)
         
-        raise HTTPRetryException(f"Max async retries ({self.max_retries}) exceeded for {url}")
+        raise HTTPRetryException(f"Max async retries ({self.max_retries}) exceeded for {url}: {str(last_exception)}")
     
     async def get(self, endpoint: str, **kwargs) -> Any:
         """Async GET request"""
@@ -952,7 +1056,7 @@ class AsyncHTTPClient:
     
     async def batch_requests(self, requests_list: List[Dict[str, Any]]) -> List[Any]:
         """
-        Execute multiple requests concurrently.
+        Execute multiple requests concurrently while preserving order.
         
         Args:
             requests_list: List of request dicts with 'method', 'endpoint', etc.
@@ -962,17 +1066,21 @@ class AsyncHTTPClient:
         """
         tasks = []
         for req in requests_list:
-            method = req.pop('method', 'GET')
-            endpoint = req.pop('endpoint')
-            tasks.append(self.request(method, endpoint, **req))
+            # Create a copy to avoid mutating the input
+            req_copy = dict(req)
+            method = req_copy.pop('method', 'GET')
+            endpoint = req_copy.pop('endpoint')
+            tasks.append(self.request(method, endpoint, **req_copy))
         
+        # Use gather to preserve order instead of as_completed
         results = []
-        for task in asyncio.as_completed(tasks):
-            try:
-                result = await task
-                results.append({'success': True, 'data': result})
-            except Exception as e:
-                results.append({'success': False, 'error': str(e)})
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for response in responses:
+            if isinstance(response, Exception):
+                results.append({'success': False, 'error': str(response)})
+            else:
+                results.append({'success': True, 'data': response})
         
         return results
 

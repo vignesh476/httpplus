@@ -1,6 +1,6 @@
-# Advanced Features Guide
+# HTTPPlus Advanced Features Guide
 
-Comprehensive guide to all advanced features in `my_common_package`, explaining each feature's purpose and real-world applications.
+Comprehensive guide to all advanced features in `httpplus`, explaining each feature's purpose and real-world applications.
 
 ## Table of Contents
 1. [Smart Request Retry & Exponential Backoff](#smart-request-retry--exponential-backoff)
@@ -45,7 +45,7 @@ Failure 5: Max retries exceeded, raise exception
 
 ### Example Usage
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 # Configure retry behavior
 client = HTTPClient(
@@ -101,7 +101,7 @@ CLOSED (Recovered) or OPEN (Still failing)
 
 ### Example Usage
 ```python
-from my_common_package import HTTPClient, HTTPCircuitBreakerException
+from httpplus import HTTPClient, HTTPCircuitBreakerException
 
 client = HTTPClient()  # Circuit breaker enabled by default
 
@@ -145,7 +145,7 @@ Request 3: Cache EXPIRED → Fetch from server → Update cache
 
 ### Example Usage
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient(
     enable_caching=True,
@@ -206,7 +206,7 @@ Wait time kicks in when bucket depleted
 
 ### Example Usage
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient()
 # Built-in rate limiter with defaults
@@ -242,7 +242,7 @@ Manage HTTP sessions with cookie persistence, authentication tokens, and custom 
 
 ### Example Usage
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient(base_url="https://api.example.com")
 session = client.create_session("my_app", persist_cookies=True)
@@ -317,7 +317,7 @@ Return result
 
 ### Example Usage
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient()
 
@@ -354,7 +354,7 @@ print(data['name'])  # Direct property access
 
 #### XML
 ```python
-from my_common_package import ResponseFormat
+from httpplus import ResponseFormat
 root = client.get("/api/xml", response_format=ResponseFormat.XML)
 title = root.find('.//title').text
 ```
@@ -406,7 +406,7 @@ Upload and download files with progress tracking.
 ### Download with Progress
 
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient()
 
@@ -454,7 +454,7 @@ Monitor endpoint availability with simple health checks.
 ### Example Usage
 
 ```python
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 client = HTTPClient()
 
@@ -515,13 +515,13 @@ except HTTPCircuitBreakerException:
     print("Service is down, try again later")
 ```
 
-#### HTTPValidationException
-When response validation fails
+#### HTTPSchemaValidationException
+When response schema validation fails
 ```python
 try:
-    result = client.get("/endpoint")
-except HTTPValidationException:
-    print("Response doesn't match expected format")
+    result = client.get("/endpoint", response_schema=user_schema)
+except HTTPSchemaValidationException:
+    print("Response doesn't match expected schema")
 ```
 
 #### HTTPParsingException
@@ -536,7 +536,7 @@ except HTTPParsingException:
 ### Comprehensive Error Handling
 
 ```python
-from my_common_package import (
+from httpplus import (
     HTTPClient,
     HTTPTimeoutException,
     HTTPRetryException,
@@ -584,7 +584,7 @@ Built-in logging for debugging and monitoring requests.
 
 ```python
 import logging
-from my_common_package import HTTPClient
+from httpplus import HTTPClient
 
 # Configure logging level
 logging.basicConfig(level=logging.DEBUG)

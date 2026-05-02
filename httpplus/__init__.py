@@ -16,41 +16,79 @@ A production-ready HTTP client library with advanced features including:
 Perfect for building reliable APIs, microservices, and data pipelines.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 __author__ = "Vignesh Buggaram"
 __license__ = "MIT"
 
 # Import main modules for convenience
 from . import http_utils
 
-# Expose key classes and functions
+# Expose key classes, functions, and exceptions
 from .http_utils import (
+    # Main Clients
     HTTPClient,
     AsyncHTTPClient,
+    
+    # Enums
     ResponseFormat,
+    CircuitBreakerState,
+    
+    # Core Components
     Session,
     ResponseCache,
     CircuitBreaker,
     RateLimiter,
     SchemaValidator,
     ResponseParser,
+    
+    # Convenience Functions
     quick_get,
     quick_post,
     download,
+    
+    # Exceptions
+    HTTPUtilException,
+    HTTPRetryException,
+    HTTPTimeoutException,
+    HTTPCircuitBreakerException,
+    HTTPValidationException,
+    HTTPParsingException,
+    HTTPSchemaValidationException,
 )
 
 __all__ = [
-    'http_utils',
+    # Metadata
+    '__version__',
+    '__author__',
+    '__license__',
+    
+    # Main Clients
     'HTTPClient',
     'AsyncHTTPClient',
+    
+    # Enums
     'ResponseFormat',
+    'CircuitBreakerState',
+    
+    # Core Components
     'Session',
     'ResponseCache',
     'CircuitBreaker',
     'RateLimiter',
     'SchemaValidator',
     'ResponseParser',
+    
+    # Convenience Functions
     'quick_get',
     'quick_post',
     'download',
+    
+    # Exceptions
+    'HTTPUtilException',
+    'HTTPRetryException',
+    'HTTPTimeoutException',
+    'HTTPCircuitBreakerException',
+    'HTTPValidationException',
+    'HTTPParsingException',
+    'HTTPSchemaValidationException',
 ]
